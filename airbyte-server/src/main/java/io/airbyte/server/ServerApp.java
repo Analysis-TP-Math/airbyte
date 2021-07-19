@@ -24,6 +24,8 @@
 
 package io.airbyte.server;
 
+import io.airbyte.analytics.Deployment;
+import io.airbyte.analytics.Deployment.DeploymentMode;
 import io.airbyte.analytics.TrackingClientSingleton;
 import io.airbyte.commons.io.FileTtlManager;
 import io.airbyte.commons.resources.MoreResources;
@@ -85,6 +87,7 @@ public class ServerApp {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
   private static final int PORT = 8001;
+
   /**
    * We can't support automatic migration for kube before this version because we had a bug in kube
    * which would cause airbyte db to erase state upon termination, as a result the automatic migration
@@ -215,7 +218,8 @@ public class ServerApp {
   }
 
   public static void runServer(final Set<ContainerRequestFilter> requestFilters,
-                               final Set<ContainerResponseFilter> responseFilters)
+                               final Set<ContainerResponseFilter> responseFilters,
+                               final Deployment.DeploymentMode deploymentMode)
       throws Exception {
     final Configs configs = new EnvConfigs();
 
@@ -229,13 +233,6 @@ public class ServerApp {
     // tracking we can associate all action with the correct anonymous id.
     setCustomerIdIfNotSet(configRepository);
 
-    TrackingClientSingleton.initialize(
-        configs.getTrackingStrategy(),
-        configs.getWorkerEnvironment(),
-        configs.getAirbyteRole(),
-        configs.getAirbyteVersion(),
-        configRepository);
-
     LOGGER.info("Creating Scheduler persistence...");
     final Database jobDatabase = Databases.createPostgresDatabaseWithRetry(
         configs.getDatabaseUser(),
@@ -243,8 +240,14 @@ public class ServerApp {
         configs.getDatabaseUrl(),
         Databases.IS_JOB_DATABASE_READY);
     final JobPersistence jobPersistence = new DefaultJobPersistence(jobDatabase);
-
     createDeploymentIfNoneExists(jobPersistence);
+
+    TrackingClientSingleton.initialize(
+        configs.getTrackingStrategy(),
+        new Deployment(deploymentMode, jobPersistence.getDeployment().orElseThrow(), configs.getWorkerEnvironment()),
+        configs.getAirbyteRole(),
+        configs.getAirbyteVersion(),
+        configRepository);
 
     final String airbyteVersion = configs.getAirbyteVersion();
     if (jobPersistence.getVersion().isEmpty()) {
@@ -276,7 +279,7 @@ public class ServerApp {
   }
 
   public static void main(String[] args) throws Exception {
-    runServer(Collections.emptySet(), Set.of(new CorsFilter()));
+    runServer(Collections.emptySet(), Set.of(new CorsFilter()), DeploymentMode.OSS);
   }
 
   /**
