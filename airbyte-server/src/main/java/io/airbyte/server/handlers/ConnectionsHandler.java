@@ -25,6 +25,7 @@
 package io.airbyte.server.handlers;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
@@ -37,11 +38,13 @@ import io.airbyte.api.model.ConnectionSchedule;
 import io.airbyte.api.model.ConnectionStatus;
 import io.airbyte.api.model.ConnectionUpdate;
 import io.airbyte.api.model.ResourceRequirements;
-import io.airbyte.api.model.SyncMode;
 import io.airbyte.api.model.WorkspaceIdRequestBody;
 import io.airbyte.commons.enums.Enums;
+import io.airbyte.commons.json.Jsons;
+import io.airbyte.config.DestinationConnection;
 import io.airbyte.config.JobSyncConfig.NamespaceDefinitionType;
 import io.airbyte.config.Schedule;
+import io.airbyte.config.SourceConnection;
 import io.airbyte.config.StandardDestinationDefinition;
 import io.airbyte.config.StandardSourceDefinition;
 import io.airbyte.config.StandardSync;
@@ -54,7 +57,9 @@ import io.airbyte.validation.json.JsonValidationException;
 import io.airbyte.workers.WorkerUtils;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -78,8 +83,36 @@ public class ConnectionsHandler {
     this(configRepository, UUID::randomUUID);
   }
 
+  private void validateWorkspace(UUID sourceId, UUID destinationId, Set<UUID> operationIds)
+      throws JsonValidationException, ConfigNotFoundException, IOException {
+    final SourceConnection sourceConnection = configRepository.getSourceConnection(sourceId);
+    final DestinationConnection destinationConnection = configRepository.getDestinationConnection(destinationId);
+
+    Preconditions.checkState(
+        sourceConnection.getWorkspaceId().equals(destinationConnection.getWorkspaceId()),
+        String.format(
+            "Source and destination do not belong to the same workspace. Source id: %s, Source workspace id: %s, Destination id: %s, Destination workspace id: %s",
+            sourceId,
+            sourceConnection.getWorkspaceId(),
+            destinationId,
+            destinationConnection.getWorkspaceId()));
+
+    for (UUID operationId : operationIds) {
+      final UUID operationWorkspaceId = configRepository.getStandardSyncOperation(operationId).getWorkspaceId();
+      Preconditions.checkState(
+          sourceConnection.getWorkspaceId().equals(operationWorkspaceId),
+          String.format(
+              "Operation and connection do not belong to the same workspace. Workspace id: %s, Operation id: %s, Operation workspace id: %s",
+              sourceConnection.getWorkspaceId(),
+              operationId,
+              operationWorkspaceId));
+    }
+  }
+
   public ConnectionRead createConnection(ConnectionCreate connectionCreate) throws JsonValidationException, IOException, ConfigNotFoundException {
     final UUID connectionId = uuidGenerator.get();
+
+    validateWorkspace(connectionCreate.getSourceId(), connectionCreate.getDestinationId(), new HashSet<>(connectionCreate.getOperationIds()));
 
     // persist sync
     final StandardSync standardSync = new StandardSync()
@@ -167,7 +200,11 @@ public class ConnectionsHandler {
 
   public ConnectionRead updateConnection(ConnectionUpdate connectionUpdate) throws ConfigNotFoundException, IOException, JsonValidationException {
     // retrieve and update sync
-    final StandardSync persistedSync = configRepository.getStandardSync(connectionUpdate.getConnectionId())
+    final StandardSync persistedSync = configRepository.getStandardSync(connectionUpdate.getConnectionId());
+
+    validateWorkspace(persistedSync.getSourceId(), persistedSync.getDestinationId(), new HashSet<>(connectionUpdate.getOperationIds()));
+
+    final StandardSync newConnection = Jsons.clone(persistedSync)
         .withNamespaceDefinition(Enums.convertTo(connectionUpdate.getNamespaceDefinition(), NamespaceDefinitionType.class))
         .withNamespaceFormat(connectionUpdate.getNamespaceFormat())
         .withPrefix(connectionUpdate.getPrefix())
@@ -177,13 +214,13 @@ public class ConnectionsHandler {
 
     // update Resource Requirements
     if (connectionUpdate.getResourceRequirements() != null) {
-      persistedSync.withResourceRequirements(new io.airbyte.config.ResourceRequirements()
+      newConnection.withResourceRequirements(new io.airbyte.config.ResourceRequirements()
           .withCpuRequest(connectionUpdate.getResourceRequirements().getCpuRequest())
           .withCpuLimit(connectionUpdate.getResourceRequirements().getCpuLimit())
           .withMemoryRequest(connectionUpdate.getResourceRequirements().getMemoryRequest())
           .withMemoryLimit(connectionUpdate.getResourceRequirements().getMemoryLimit()));
     } else {
-      persistedSync.withResourceRequirements(WorkerUtils.DEFAULT_RESOURCE_REQUIREMENTS);
+      newConnection.withResourceRequirements(WorkerUtils.DEFAULT_RESOURCE_REQUIREMENTS);
     }
 
     // update sync schedule
@@ -191,12 +228,12 @@ public class ConnectionsHandler {
       final Schedule newSchedule = new Schedule()
           .withTimeUnit(toPersistenceTimeUnit(connectionUpdate.getSchedule().getTimeUnit()))
           .withUnits(connectionUpdate.getSchedule().getUnits());
-      persistedSync.withManual(false).withSchedule(newSchedule);
+      newConnection.withManual(false).withSchedule(newSchedule);
     } else {
-      persistedSync.withManual(true).withSchedule(null);
+      newConnection.withManual(true).withSchedule(null);
     }
 
-    configRepository.writeStandardSync(persistedSync);
+    configRepository.writeStandardSync(newConnection);
     return buildConnectionRead(connectionUpdate.getConnectionId());
   }
 
@@ -295,10 +332,6 @@ public class ConnectionsHandler {
 
   private StandardSync.Status toPersistenceStatus(ConnectionStatus apiStatus) {
     return Enums.convertTo(apiStatus, StandardSync.Status.class);
-  }
-
-  private SyncMode toApiSyncMode(io.airbyte.config.SyncMode persistenceStatus) {
-    return Enums.convertTo(persistenceStatus, SyncMode.class);
   }
 
   private ConnectionStatus toApiStatus(StandardSync.Status status) {
