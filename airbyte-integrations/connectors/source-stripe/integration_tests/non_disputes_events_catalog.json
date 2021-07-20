@@ -2171,7 +2171,7 @@
                       "type": ["null", "string"]
                     },
                     "percent_off": {
-                      "type": ["null", "integer"]
+                      "type": ["null", "number"]
                     },
                     "created": {
                       "type": ["null", "string"],
@@ -2746,7 +2746,7 @@
                       "type": ["null", "string"]
                     },
                     "percent_off": {
-                      "type": ["null", "integer"]
+                      "type": ["null", "number"]
                     },
                     "created": {
                       "type": ["null", "integer"]
