@@ -1,0 +1,90 @@
+{
+  "documentationUrl": "https://docsurl.com",
+  "connectionSpecification": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Facebook Ad Library Spec",
+    "type": "object",
+    "required": ["access_token", "ad_reached_countries", "search_page_ids"],
+    "additionalProperties": true,
+    "properties": {
+        "access_token": {
+          "description": "Your API Access Token. See <a href=\"https://www.facebook.com/ads/library/api/?source=archive-landing-page/\">here</a> for instructions on how to obtain an API Accesss Token. The token is case sensitive.",
+          "type": "string",
+          "airbyte_secret": true
+        },
+        "ad_active_status": {
+          "type": ["null","string"],
+          "enum": ["ACTIVE", "ALL", "INACTIVE"],
+          "default": "null"
+        },
+        "ad_delivery_date_max": {
+          "type": ["null","string"],
+          "pattern": "(^[0-9]{4}-[0-9]{2}-[0-9]{2}$)|(^$)",
+          "examples": ["YYYY-MM-DD"]
+        },
+        "ad_delivery_date_min": {
+          "type": ["null","string"],
+          "description": "Start getting data from this date.",
+          "pattern": "(^[0-9]{4}-[0-9]{2}-[0-9]{2}$)|(^$)$",
+          "examples": ["YYYY-MM-DD"]
+        },
+        "ad_reached_countries": {
+          "description": "ISO 3166 Alpha-2 country codes. Specified the country or countries from which to pull advert records from the ad library.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "examples": ["US", "IE", "GB"]
+          }
+        },
+        "ad_type": {
+          "description": "Facebook defined advert category. At present only \"POLITICAL_AND_ISSUE_ADS\" are supported by the API, but it is possible in future that this will be extended to cover other types of adverts. Defaults to \"POLITICAL_AND_ISSUE_ADS\".",
+          "type": "string",
+          "enum": ["POLITICAL_AND_ISSUE_ADS"],
+          "default": "POLITICAL_AND_ISSUE_ADS"
+        },
+        "bylines": {
+          "type": ["null","array"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "delivery_by_region": {
+          "type": ["null","array"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "langauges": {
+          "type": ["null","array"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "media_type": {
+          "type": ["null","string"],
+          "enum": ["ALL", "IMAGE", "VIDEO", "NONE"]
+        },
+        "potential_reach_max": {
+          "type": ["null","integer"]
+        },
+        "potential_reach_min": {
+          "type": ["null","integer"]
+        },
+        "publisher_platforms": {
+          "type": ["null","array"],
+          "items": {
+            "type": "string",
+            "enum": ["FACEBOOK", "INSTAGRAM", "AUDIENCE_NETWORK", "MESSENGER", "WHATSAPP", "OCCULUS"]
+          }
+        },
+        "search_page_ids": {
+          "description": "An array of facebook page_ids. List the IDs of pages you want to pull records from. If not specified, will pull records from any pages that have adverts matching the previously specified country and type restrictions.",
+          "type": ["string"]
+        },
+        "search_terms": {
+          "type": ["null","string"]
+        }
+    }
+  }
+}
