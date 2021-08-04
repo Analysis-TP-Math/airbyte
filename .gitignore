@@ -36,3 +36,8 @@ crash.log
 # Airflow Demo
 resources/examples/airflow/logs/*
 !resources/examples/airflow/logs/.gitkeep
+
+# testing
+scratch
+tutorial
+models
