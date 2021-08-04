@@ -1,0 +1,146 @@
+{
+  "streams": [
+      {
+          "stream": {
+              "name": "ads_archive",
+              "supported_sync_modes": ["full_refresh"],
+              "source_defined_cursor": false,
+              "json_schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": ["null", "object"],
+                "properties": {
+                    "id": {
+                        "type": ["null", "string"]
+                    },
+                    "ad_creation_time": {
+                        "type": ["null", "string"]
+                    },
+                    "ad_creative_bodies": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ad_creative_link_captions": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ad_creative_link_descriptions": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ad_creative_link_titles": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ad_delivery_start_time": {
+                        "type": ["null", "string"]
+                    },
+                    "ad_delivery_stop_time": {
+                        "type": ["null", "string"]
+                    },
+                    "ad_snapshot_url": {
+                        "type": ["null", "string"]
+                    },
+                    "currency": {
+                        "type": ["null", "string"]
+                    },
+                    "demographic_distribution": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "percentage": {
+                                    "type": "string"
+                                },
+                                "age": {
+                                    "type": "string"
+                                },
+                                "gender": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "region_distribution": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "percentage": {
+                                    "type": "string"
+                                },
+                                "region": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "funding_entity": {
+                        "type": ["null", "string"]
+                    },
+                    "impressions": {
+                        "type": ["null", "object"],
+                        "properties": {
+                            "lower_bound": {
+                                "type": "string"
+                            },
+                            "upper_bound": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "languages": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "page_id": {
+                        "type": ["null", "string"]
+                    },
+                    "page_name": {
+                        "type": ["null", "string"]
+                    },
+                    "potential_reach": {
+                        "type": ["null", "object"],
+                        "properties": {
+                            "lower_bound": {
+                                "type": "string"
+                            },
+                            "upper_bound": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "publisher_platforms": {
+                        "type": ["null", "array"],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "spend": {
+                        "type": ["null", "object"],
+                        "properties": {
+                            "lower_bound": {
+                                "type": "string"
+                            },
+                            "upper_bound": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+          },
+          "sync_mode": "full_refresh",
+          "destination_sync_mode": "overwrite"
+      }
+  ]
+}

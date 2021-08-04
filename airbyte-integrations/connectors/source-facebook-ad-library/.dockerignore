@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!Dockerfile.test
+!main.py
+!source_facebook_ad_library
+!setup.py
+!secrets
