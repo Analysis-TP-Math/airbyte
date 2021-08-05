@@ -23,14 +23,5 @@
 #
 
 
-from setuptools import find_packages, setup
-
-setup(
-    name="source_http_request",
-    description="Source implementation for HTTP Request.",
-    author="Airbyte",
-    author_email="contact@airbyte.io",
-    packages=find_packages(),
-    install_requires=["airbyte-protocol", "base-python", "requests", "pytest==6.1.2"],
-    package_data={"": ["*.json"]},
-)
+def test_example_method():
+    assert True

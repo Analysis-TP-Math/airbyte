@@ -22,12 +22,27 @@
 # SOFTWARE.
 #
 
+from setuptools import find_packages, setup
 
-import sys
+MAIN_REQUIREMENTS = [
+    "tap-kustomer",
+    "airbyte-cdk",
+]
 
-from base_python.entrypoint import launch
-from source_http_request import SourceHttpRequest
+TEST_REQUIREMENTS = [
+    "pytest~=6.1",
+    "source-acceptance-test",
+]
 
-if __name__ == "__main__":
-    source = SourceHttpRequest()
-    launch(source, sys.argv[1:])
+setup(
+    name="source_kustomer_singer",
+    description="Source implementation for Kustomer, built on the Singer tap implementation.",
+    author="Airbyte",
+    author_email="contact@airbyte.io",
+    packages=find_packages(),
+    install_requires=MAIN_REQUIREMENTS,
+    package_data={"": ["*.json"]},
+    extras_require={
+        "tests": TEST_REQUIREMENTS,
+    },
+)

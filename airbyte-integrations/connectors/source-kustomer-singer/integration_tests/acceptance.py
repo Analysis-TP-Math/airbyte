@@ -23,26 +23,14 @@
 #
 
 
-import unittest
+import pytest
 
-from source_http_request import SourceHttpRequest
+pytest_plugins = ("source_acceptance_test.plugin",)
 
 
-class TestSourceHttpRequest(unittest.TestCase):
-    def test_parse_config(self):
-        config = {
-            "http_method": "get",
-            "url": "http://api.bart.gov/api",
-            "headers": '{"Content-Type": "application/json"}',
-            "body": '{"something": "good"}',
-        }
-
-        source = SourceHttpRequest()
-        actual = source._parse_config(config)
-        expected = {
-            "http_method": "get",
-            "url": "http://api.bart.gov/api",
-            "headers": {"Content-Type": "application/json"},
-            "body": {"something": "good"},
-        }
-        self.assertEqual(expected, actual)
+@pytest.fixture(scope="session", autouse=True)
+def connector_setup():
+    """ This fixture is a placeholder for external resources that acceptance test might require."""
+    # TODO: setup test dependencies
+    yield
+    # TODO: clean up test dependencies
