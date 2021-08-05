@@ -98,7 +98,7 @@ class AdsArchive(HttpStream):
         response_json = response.json().get("data", [])
         for record in response_json:
             record.update({"ad_snapshot_url": "https://www.facebook.com/ads/library/?"+re.search(r"(id=[0-9]*)", record.get("ad_snapshot_url")).group(1)})
-        return response_json or None
+        return response_json
 
     def stream_slices(
         self, 
